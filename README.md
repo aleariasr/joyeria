@@ -576,5 +576,5 @@ npm run audit:storefront
 Alejandro Arias Rojas
 
 Software Developer  
-Ingeniería en Informática Empresarial  
+Informática Empresarial  
 Universidad de Costa Rica
