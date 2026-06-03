@@ -1,0 +1,200 @@
+/**
+ * Shared TypeScript types for the storefront application.
+ * These types match the API responses from the backend public routes.
+ */
+
+/**
+ * Product image in gallery
+ */
+export interface ProductImage {
+  id: number;
+  url: string;
+  orden: number;
+  es_principal: boolean;
+}
+
+/**
+ * Product variant information
+ */
+export interface ProductVariant {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  imagen_url: string;
+}
+
+/**
+ * Product type as returned by the public API
+ */
+export interface Product {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  categoria: string | null;
+  precio: number;
+  moneda: 'CRC' | 'USD' | 'EUR';
+  stock_disponible: boolean;
+  stock?: number; // Only available in product detail
+  imagen_url: string | null; // Imagen principal
+  imagenes: ProductImage[]; // NUEVO: Galería completa
+  slug: string;
+  es_producto_variante?: boolean; // Product has variants
+  es_producto_compuesto?: boolean; // Product is a set/composite
+  es_variante?: boolean; // This is a variant of another product
+  variante_id?: number; // Variant ID if this is a variant
+  variante_nombre?: string; // Variant name if this is a variant
+  variantes?: ProductVariant[]; // Available variants if this product has them
+  componentes?: ProductComponent[]; // Components if this is a set
+  _uniqueKey?: string; // Unique key for deduplication (product_id-variant_id)
+}
+
+/**
+ * Component of a composite product (set)
+ */
+export interface ProductComponent {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  precio: number;
+  moneda: 'CRC' | 'USD' | 'EUR';
+  stock_disponible: boolean;
+  stock: number;
+  imagen_url: string | null;
+  cantidad_requerida: number;
+  estado: string;
+  es_activo: boolean;
+}
+
+/**
+ * Components response from API
+ */
+export interface ComponentsResponse {
+  componentes: ProductComponent[];
+  stock_set: number;
+  completo: boolean;
+}
+
+/**
+ * Cart item with product and quantity
+ */
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+/**
+ * Customer information for checkout
+ */
+export interface Customer {
+  nombre: string;
+  telefono: string;
+  email: string;
+  cedula?: string;
+  direccion?: string;
+}
+
+/**
+ * Order item for API submission
+ */
+export interface OrderItem {
+  product_id: number;
+  quantity: number;
+  variante_id?: number; // Optional variant ID for products with variants
+}
+
+/**
+ * Order creation request
+ */
+export interface CreateOrderRequest {
+  customer: Customer;
+  items: OrderItem[];
+  payment_method?: string;
+  notes?: string;
+}
+
+/**
+ * Order response from API
+ */
+export interface Order {
+  id: number;
+  date: string;
+  total: number;
+  subtotal: number;
+  discount: number;
+  payment_method: string;
+  notes: string | null;
+  items: OrderItemDetail[];
+}
+
+/**
+ * Order item detail from API
+ */
+export interface OrderItemDetail {
+  id: number;
+  product_name: string;
+  product_image: string | null;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+/**
+ * API response for products list
+ */
+export interface ProductsResponse {
+  products: Product[];
+  total: number; // Total products matching filters in database
+  total_products: number; // Products in current page (after variant expansion)
+  page: number;
+  per_page: number;
+  total_pages: number;
+  has_more: boolean; // Indicates if there are more pages to load
+}
+
+/**
+ * API response for featured products
+ */
+export interface FeaturedProductsResponse {
+  products: Product[];
+}
+
+/**
+ * API response for categories
+ */
+export interface CategoriesResponse {
+  categories: string[];
+}
+
+/**
+ * API response for order creation
+ */
+export interface CreateOrderResponse {
+  success: boolean;
+  message: string;
+  order: {
+    id: number;
+    total: number;
+    items_count: number;
+    customer_name: string;
+  };
+}
+
+/**
+ * Generic API error response
+ */
+export interface ApiError {
+  error: string;
+}
+
+/**
+ * Image zoom component props
+ */
+export interface ImageZoomProps {
+  src: string;
+  alt: string;
+  highResSrc?: string;
+  className?: string;
+  priority?: boolean;
+}

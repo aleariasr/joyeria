@@ -1,0 +1,61 @@
+{
+  "name": "sistemajoyeria",
+  "version": "2.0.0",
+  "description": "Sistema completo de gestión para joyerías con base de datos en la nube",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "storefront"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "install:backend": "npm install --workspace=backend",
+    "install:frontend": "npm install --workspace=frontend",
+    "install:storefront": "npm install --workspace=storefront",
+    "start:backend": "npm start --workspace=backend",
+    "start:frontend": "npm start --workspace=frontend",
+    "start:storefront": "npm start --workspace=storefront",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:storefront": "npm run dev --workspace=storefront",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:storefront": "npm run build --workspace=storefront",
+    "lint:storefront": "npm run lint --workspace=storefront",
+    "test:backend": "npm run test --workspace=backend",
+    "test:backend:passing": "npm run test:passing --workspace=backend",
+    "test:backend:smoke": "npm run test:smoke --workspace=backend",
+    "test:backend:performance": "npm run test:performance --workspace=backend",
+    "test:storefront": "npm run test --workspace=storefront",
+    "test:storefront:e2e": "npm run test:e2e --workspace=storefront",
+    "test:storefront:all": "npm run test:all --workspace=storefront",
+    "test:pos": "npm run test:pos --workspace=backend",
+    "test:e2e:pos": "npm run test:frontend --workspace=frontend",
+    "test:notifications": "npm run test:notifications --workspace=backend",
+    "test:orders": "npm run test:orders --workspace=backend",
+    "test:auth": "npm run test:auth --workspace=backend",
+    "test:full": "node scripts/test-orchestrator.js",
+    "audit:backend": "npm audit --workspace=backend",
+    "audit:frontend": "npm audit --workspace=frontend",
+    "audit:storefront": "npm audit --workspace=storefront",
+    "start": "echo 'Please run backend and frontend separately:' && echo '  npm run start:backend' && echo '  npm run start:frontend' && echo '  npm run start:storefront'"
+  },
+  "keywords": [
+    "joyeria",
+    "inventario",
+    "sistema",
+    "gestion"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aleariasr/sistemajoyeria.git"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "next": "^14.2.35"
+  }
+}

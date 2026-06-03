@@ -1,0 +1,204 @@
+/**
+ * Product Card Component
+ * 
+ * Elegant product display card with hover effects and add-to-cart.
+ * Optimized for performance and touch devices.
+ */
+
+'use client';
+
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { useCartStore } from '@/hooks/useCart';
+import { formatPrice, optimizeCloudinaryImage, getLowQualityPlaceholder } from '@/lib/utils';
+import { toast } from '@/components/ui/Toast';
+import type { Product } from '@/lib/types';
+
+interface ProductCardProps {
+  product: Product;
+  index?: number;
+}
+
+function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
+  const { addItem, openCart } = useCartStore();
+  
+  // Detect touch device safely on client side only
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
+  useEffect(() => {
+    // Only run on client side
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
+    // Prevent event from bubbling up to the Link
+    e.preventDefault();
+    e.stopPropagation();
+    
+    addItem(product, 1);
+    toast.success(`${product.nombre} agregado al carrito`, {
+      action: {
+        label: 'Ver carrito',
+        onClick: openCart,
+      },
+    });
+  }, [product, addItem, openCart]);
+
+  // Memoize URLs to prevent recalculation on every render
+  // Include variante_id in URL if this is a variant product
+  const productUrl = useMemo(() => {
+    if (product.variante_id) {
+      return `/product/${product.id}?variante_id=${product.variante_id}`;
+    }
+    return `/product/${product.id}`;
+  }, [product.id, product.variante_id]);
+  
+  const imageUrl = useMemo(() => {
+    // Find the primary image (sorted once and memoized)
+    const imagenPrincipal = product.imagenes?.find(img => img.es_principal)?.url 
+      || product.imagenes?.[0]?.url 
+      || product.imagen_url;
+    return optimizeCloudinaryImage(imagenPrincipal, {
+      width: 800,
+      height: 800,
+      quality: 'auto:good',
+      crop: 'fill',
+      gravity: 'south',
+    });
+  }, [product.imagenes, product.imagen_url]);
+  
+  const placeholderUrl = useMemo(() => {
+    const imagenPrincipal = product.imagenes?.find(img => img.es_principal)?.url 
+      || product.imagenes?.[0]?.url 
+      || product.imagen_url;
+    return getLowQualityPlaceholder(imagenPrincipal, { width: 50, height: 50 });
+  }, [product.imagenes, product.imagen_url]);
+
+  // Simplified animation config for better performance
+  // Cap delay at 0.3s to avoid long waits for items further down the list
+  const cardAnimation = useMemo(() => ({
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.3, delay: Math.min(index * 0.05, 0.3) }
+  }), [index]);
+
+  return (
+    <motion.article
+      {...cardAnimation}
+      className="group"
+    >
+      <Link
+        href={productUrl}
+        className="block"
+        aria-label={`Ver detalles de ${product.nombre}`}
+      >
+        {/* Image Container con Progressive Loading */}
+        <div className="relative aspect-square rounded-2xl overflow-hidden bg-primary-50 mb-4">
+          {imageError ? (
+            <div className="w-full h-full flex items-center justify-center flex-col gap-2">
+              <span className="text-5xl text-gray-300">🖼️</span>
+              <span className="text-gray-400 text-xs">Sin imagen</span>
+            </div>
+          ) : (
+            <>
+              {/* Low quality placeholder - loads instantly */}
+              {!imageLoaded && (
+                <div className="absolute inset-0">
+                  <Image
+                    src={placeholderUrl}
+                    alt={`${product.nombre} - Cargando...`}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="object-cover"
+                    priority={index < 4}
+                  />
+                </div>
+              )}
+              
+              {/* High quality image - loads progressively */}
+              <Image
+                src={imageUrl}
+                alt={product.nombre}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className={`object-cover transition-all duration-500 ${
+                  imageLoaded 
+                    ? 'opacity-100 group-hover:scale-105' 
+                    : 'opacity-0'
+                }`}
+                loading="lazy"
+                onError={() => setImageError(true)}
+                onLoad={() => setImageLoaded(true)}
+              />
+            </>
+          )}
+          
+          {/* Quick Add Button - Shows on hover (desktop only) */}
+          {!isTouchDevice && (
+            <button
+              onClick={handleAddToCart}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 
+                         px-6 py-2.5 bg-primary-900 text-white text-sm font-medium 
+                         rounded-full shadow-premium opacity-0 group-hover:opacity-100 
+                         transition-all duration-300 transform translate-y-2 group-hover:translate-y-0
+                         hover:bg-primary-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500
+                         z-10"
+              aria-label={`Agregar ${product.nombre} al carrito`}
+              type="button"
+            >
+              Agregar al carrito
+            </button>
+          )}
+
+          {/* Category Badge */}
+          {product.categoria && (
+            <span className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm text-primary-700 text-xs font-medium rounded-full">
+              {product.categoria}
+            </span>
+          )}
+        </div>
+
+        {/* Product Info */}
+        <div className="space-y-1">
+          <h3 className="font-medium text-primary-900 group-hover:text-gold-600 transition-colors duration-200 line-clamp-1">
+            {product.nombre}
+          </h3>
+          
+          {product.descripcion && (
+            <p className="text-primary-500 text-sm line-clamp-1">
+              {product.descripcion}
+            </p>
+          )}
+          
+          <p className="text-lg font-semibold text-primary-900 pt-1">
+            {formatPrice(product.precio, product.moneda)}
+          </p>
+        </div>
+      </Link>
+
+      {/* Add to Cart Button for Touch Devices - Outside the Link */}
+      {isTouchDevice && (
+        <button
+          onClick={handleAddToCart}
+          className="mt-3 w-full px-4 py-2.5 bg-primary-900 text-white text-sm font-medium 
+                     rounded-lg shadow-md hover:bg-primary-800 active:bg-primary-950
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500
+                     transition-colors duration-200"
+          aria-label={`Agregar ${product.nombre} al carrito`}
+          type="button"
+        >
+          Agregar al carrito
+        </button>
+      )}
+    </motion.article>
+  );
+}
+
+// Use React.memo to prevent unnecessary re-renders
+export const ProductCard = React.memo(ProductCardComponent);
+
+export default ProductCard;
